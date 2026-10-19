@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Cloud tool configuration lives in writable directories, without changing HOME.
+if [[ -x /workspace/tools/flutter/bin/flutter ]]; then
+  export PATH="/workspace/tools/flutter/bin:$PATH"
+  export XDG_CONFIG_HOME=/workspace/.local-config
+  export PUB_CACHE=/workspace/.pub-cache
+  export ANALYZER_STATE_LOCATION_OVERRIDE=/workspace/.analyzer-state
+  export CI=true
+  export FLUTTER_SUPPRESS_ANALYTICS=true
+  export DART_SUPPRESS_ANALYTICS=true
+fi
+cd "$(dirname "$0")/.."
+exec flutter "$@"
