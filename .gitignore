@@ -1,0 +1,14 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+coverage/
+*.iml
+.idea/
+.DS_Store
+android/.gradle/
+android/local.properties
+android/key.properties
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+*.jks
+*.keystore
