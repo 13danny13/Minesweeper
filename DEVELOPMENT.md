@@ -33,6 +33,7 @@ flutter build web --no-web-resources-cdn
 export PATH="/workspace/tools/flutter/bin:$PATH"
 export XDG_CONFIG_HOME=/workspace/.local-config
 export PUB_CACHE=/workspace/.pub-cache
+export ANALYZER_STATE_LOCATION_OVERRIDE=/workspace/.analyzer-state
 export FLUTTER_SUPPRESS_ANALYTICS=true
 export DART_SUPPRESS_ANALYTICS=true
 export CI=true

@@ -1,7 +1,10 @@
 // Dependency-free check for constrained environments. The Flutter suite also
 // covers widgets and persistent storage: flutter test.
+import 'dart:io';
 import 'dart:math';
 
+// Keep this runner usable before package resolution in constrained environments.
+// ignore: avoid_relative_lib_imports
 import '../lib/game.dart';
 
 void check(bool condition, String message) {
@@ -28,8 +31,9 @@ void main() {
       check(restored.flags.contains(game.mines.first), 'Lost flag');
       check(restored.seconds == seed, 'Lost timer');
       for (var i = 0; i < game.size; i++) {
-        if (!game.mines.contains(i) && !game.revealed.contains(i))
+        if (!game.mines.contains(i) && !game.revealed.contains(i)) {
           game.reveal(i);
+        }
       }
       check(game.status == GameStatus.won, 'Safe solution did not win');
       check(game.remaining == 0, 'Winning flags incomplete');
@@ -46,7 +50,7 @@ void main() {
     MineGame(Difficulty.easy).neighbors(0).join(',') == '1,9,10',
     'Corner neighbors wrap',
   );
-  print(
+  stdout.writeln(
     'PASS: $boards boards; safe openings, flood fill, victory, defeat, '
     'flags, frozen final state, serialization and timer.',
   );
