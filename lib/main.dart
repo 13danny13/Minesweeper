@@ -145,8 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: HeightAdaptiveMenu(
             children: [
               Container(
                 padding: const EdgeInsets.all(28),
@@ -288,6 +287,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+/// Scale the whole menu with the usable height while retaining vertical scroll
+/// on very short screens and when accessibility text makes content taller.
+class HeightAdaptiveMenu extends StatelessWidget {
+  const HeightAdaptiveMenu({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = (constraints.maxHeight / 1050).clamp(.7, 1.1);
+        return SingleChildScrollView(
+          child: SizedBox(
+            width: constraints.maxWidth,
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                key: const ValueKey('menu-content'),
+                width: constraints.maxWidth / scale,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, required this.store, required this.game});
   final GameStore store;
@@ -419,26 +456,25 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Keep cells tappable on narrow screens; the board supports pan and zoom.
-                    final extent = (constraints.maxWidth - 24).clamp(
-                      320.0,
-                      740.0,
+                    // Fit every difficulty to the viewport before manual zoom.
+                    final width = (constraints.maxWidth - 24).clamp(
+                      0.0,
+                      double.infinity,
                     );
-                    final cell = (extent / game.difficulty.columns).clamp(
-                      36.0,
-                      58.0,
-                    );
-                    final width = cell * game.difficulty.columns;
+                    final height =
+                        width * game.difficulty.rows / game.difficulty.columns;
                     return InteractiveViewer(
+                      key: ValueKey('board-viewport-${constraints.maxWidth}'),
                       constrained: false,
-                      minScale: .6,
+                      minScale: 1,
                       maxScale: 2.5,
                       boundaryMargin: const EdgeInsets.all(24),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: SizedBox(
+                          key: const ValueKey('game-board'),
                           width: width,
-                          height: cell * game.difficulty.rows,
+                          height: height,
                           child: GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             padding: EdgeInsets.zero,
@@ -552,22 +588,28 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             onTap: () => move(index),
             onLongPress: () => move(index, flag: true),
             child: Center(
-              child: wrongFlag
-                  ? const Icon(Icons.close, size: 20, color: Colors.red)
-                  : mine
-                  ? const Icon(Icons.brightness_7, size: 22, color: ink)
-                  : flag
-                  ? const Icon(Icons.flag_rounded, size: 22, color: teal)
-                  : count > 0
-                  ? Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: numberColors[count],
-                      ),
-                    )
-                  : null,
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: wrongFlag
+                      ? const Icon(Icons.close, size: 20, color: Colors.red)
+                      : mine
+                      ? const Icon(Icons.brightness_7, size: 22, color: ink)
+                      : flag
+                      ? const Icon(Icons.flag_rounded, size: 22, color: teal)
+                      : count > 0
+                      ? Text(
+                          '$count',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: numberColors[count],
+                          ),
+                        )
+                      : null,
+                ),
+              ),
             ),
           ),
         ),
@@ -766,7 +808,8 @@ class _RecordsScreenState extends State<RecordsScreen> {
               const SizedBox(height: 16),
               if (wins.isEmpty)
                 const EmptyCard(
-                  text: 'Первый рекорд ещё впереди.\nЗавершите игру без единой мины.',
+                  text:
+                      'Первый рекорд ещё впереди.\nЗавершите игру без единой мины.',
                 )
               else
                 for (var i = 0; i < wins.length && i < 5; i++)
